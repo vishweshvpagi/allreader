@@ -2,37 +2,50 @@ package com.example.allreader.ui.activities;
 
 
 
+
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import com.allreader.R;
-import com.allreader.ui.fragments.HomeFragment;
+import com.example.allreader.R;
+import com.example.allreader.ui.fragments.FilePickerFragment;
+import com.example.allreader.ui.fragments.HomeFragment;
+import com.example.allreader.ui.fragments.SettingsFragment;
+import com.example.allreader.utils.PermissionUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
+
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Load default fragment
-        loadFragment(new HomeFragment());
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
-        bottomNav.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
+        com.example.allreader.utils.PermissionUtils PermissionUtils = null;
+        if (!PermissionUtils.hasStoragePermissions(this)) {
+            PermissionUtils.requestStoragePermissions(this);
+        }
+
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment());
+        }
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment fragment = null;
             int itemId = item.getItemId();
 
             if (itemId == R.id.nav_home) {
-                selectedFragment = new HomeFragment();
+                fragment = new HomeFragment();
             } else if (itemId == R.id.nav_files) {
-                selectedFragment = new FilePickerFragment();
+                fragment = new FilePickerFragment();
             } else if (itemId == R.id.nav_settings) {
-                selectedFragment = new SettingsFragment();
+                fragment = new SettingsFragment();
             }
 
-            return loadFragment(selectedFragment);
+            return loadFragment(fragment);
         });
     }
 
