@@ -1,6 +1,5 @@
 package com.example.allreader.utils;
 
-
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -64,8 +63,36 @@ public class FileUtils {
     public static boolean isImageFile(String fileName) {
         String ext = getFileExtension(fileName);
         return ext.equals("jpg") || ext.equals("jpeg") ||
-                ext.equals("png") || ext.equals("gif") || ext.equals("bmp");
+                ext.equals("png") || ext.equals("gif") ||
+                ext.equals("bmp") || ext.equals("webp");  // Added webp support
     }
+    public static boolean isPowerPointFile(String fileName) {
+        String ext = getFileExtension(fileName);
+        return ext.equals("ppt") || ext.equals("pptx");
+    }public static boolean isTxtFile(String fileName) {
+        String ext = getFileExtension(fileName);
+        return ext.equals("txt") || ext.equals("log") || ext.equals("md");
+    }public static boolean isVideoFile(String fileName) {
+        String ext = getFileExtension(fileName);
+        return ext.equals("mp4") || ext.equals("avi") || ext.equals("mkv") ||
+                ext.equals("mov") || ext.equals("wmv") || ext.equals("3gp") ||
+                ext.equals("flv") || ext.equals("webm");
+    }
+
+    public static boolean isArchiveFile(String fileName) {
+        String ext = getFileExtension(fileName);
+        return ext.equals("zip") || ext.equals("rar") ||
+                ext.equals("jar") || ext.equals("7z");
+    }
+
+
+
+
+    public static boolean isWordFile(String fileName) {
+        String ext = getFileExtension(fileName);
+        return ext.equals("doc") || ext.equals("docx");
+    }
+
 
     public static String getMimeType(String url) {
         String type = null;

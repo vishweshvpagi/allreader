@@ -5,11 +5,18 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <WebView
-        android:id="@+id/webView"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/controlsLayout" />
+        android:layout_above="@+id/navigationBar"
+        android:fillViewport="true">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -17,42 +24,41 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true" />
 
+    <!-- Simple Bottom Navigation -->
     <LinearLayout
-        android:id="@+id/controlsLayout"
+        android:id="@+id/navigationBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_alignParentBottom="true"
-        android:background="#88000000"
+        android:background="#F5F5F5"
         android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center">
+        android:gravity="center"
+        android:elevation="4dp">
 
         <Button
-            android:id="@+id/prevButton"
+            android:id="@+id/btnPrev"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="← Previous"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555" />
+            android:text="◄ Prev"
+            android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/pageIndicator"
+            android:id="@+id/slideNumber"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:text="1 / 1"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:padding="8dp" />
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#000000" />
 
         <Button
-            android:id="@+id/nextButton"
+            android:id="@+id/btnNext"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Next →"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555" />
+            android:text="Next ►"
+            android:textSize="16sp" />
 
     </LinearLayout>
 

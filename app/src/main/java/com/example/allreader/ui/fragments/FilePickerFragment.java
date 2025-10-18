@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -18,8 +19,15 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.allreader.R;
 import com.example.allreader.data.model.RecentFile;
+import com.example.allreader.ui.activities.ArchiveViewerActivity;
+import com.example.allreader.ui.activities.EpubReaderActivity;
+import com.example.allreader.ui.activities.ExcelReaderActivity;
 import com.example.allreader.ui.activities.ImageViewerActivity;
 import com.example.allreader.ui.activities.PdfReaderActivity;
+import com.example.allreader.ui.activities.PowerPointReaderActivity;
+import com.example.allreader.ui.activities.TxtReaderActivity;
+import com.example.allreader.ui.activities.VideoPlayerActivity;
+import com.example.allreader.ui.activities.WordReaderActivity;
 import com.example.allreader.utils.Constants;
 import com.example.allreader.utils.FileUtils;
 import com.example.allreader.viewmodel.FileViewModel;
@@ -62,13 +70,11 @@ public class FilePickerFragment extends Fragment {
     private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        // TEMPORARILY DISABLED: Excel and EPUB file types
-        String[] mimeTypes = {"application/pdf",
-                // "application/epub+zip",  // EPUB DISABLED
-                // "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // EXCEL DISABLED
-                "image/*"};
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        intent.setType("*/*");  // Accept all files - this allows RAR
+
+        // Remove the EXTRA_MIME_TYPES line completely
+        // This will show ALL files including RAR
+
         filePickerLauncher.launch(intent);
     }
 
@@ -79,33 +85,62 @@ public class FilePickerFragment extends Fragment {
         Intent intent = null;
         String fileType = "";
 
+        // Check file type in logical order
         if (FileUtils.isPdfFile(fileName)) {
             intent = new Intent(getActivity(), PdfReaderActivity.class);
             fileType = Constants.FILE_TYPE_PDF;
         }
-        // TEMPORARILY DISABLED: EPUB handling
-        // else if (FileUtils.isEpubFile(fileName)) {
-        //     intent = new Intent(getActivity(), EpubReaderActivity.class);
-        //     fileType = Constants.FILE_TYPE_EPUB;
-        // }
-        // TEMPORARILY DISABLED: Excel handling
-        // else if (FileUtils.isExcelFile(fileName)) {
-        //     intent = new Intent(getActivity(), ExcelReaderActivity.class);
-        //     fileType = Constants.FILE_TYPE_EXCEL;
-        // }
+        else if (FileUtils.isEpubFile(fileName)) {
+            intent = new Intent(getActivity(), EpubReaderActivity.class);
+            fileType = Constants.FILE_TYPE_EPUB;
+        }
+        else if (FileUtils.isWordFile(fileName)) {
+            intent = new Intent(getActivity(), WordReaderActivity.class);
+            fileType = Constants.FILE_TYPE_WORD;
+        }
+        else if (FileUtils.isExcelFile(fileName)) {
+            intent = new Intent(getActivity(), ExcelReaderActivity.class);
+            fileType = Constants.FILE_TYPE_EXCEL;
+        }
+        else if (FileUtils.isPowerPointFile(fileName)) {
+            intent = new Intent(getActivity(), PowerPointReaderActivity.class);
+            fileType = Constants.FILE_TYPE_POWERPOINT;
+        }
+        else if (FileUtils.isVideoFile(fileName)) {  // NEW
+            intent = new Intent(getActivity(), VideoPlayerActivity.class);
+            fileType = Constants.FILE_TYPE_VIDEO;
+        }
+
+        else if (FileUtils.isTxtFile(fileName)) {
+            intent = new Intent(getActivity(), TxtReaderActivity.class);
+            fileType = Constants.FILE_TYPE_TXT;
+        }
+        else if (FileUtils.isArchiveFile(fileName)) {
+            intent = new Intent(getActivity(), ArchiveViewerActivity.class);
+            fileType = Constants.FILE_TYPE_ARCHIVE;
+        }
         else if (FileUtils.isImageFile(fileName)) {
             intent = new Intent(getActivity(), ImageViewerActivity.class);
             fileType = Constants.FILE_TYPE_IMAGE;
-        } else {
-            Toast.makeText(getContext(), "Unsupported file type", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(getContext(), "Unsupported file type: " + fileName, Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Pass file information to activity
         intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
         intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
         intent.putExtra(Constants.EXTRA_FILE_TYPE, fileType);
 
-        RecentFile recentFile = new RecentFile(fileName, filePath, fileType, System.currentTimeMillis(), 0);
+        // Save to recent files
+        RecentFile recentFile = new RecentFile(
+                fileName,
+                filePath,
+                fileType,
+                System.currentTimeMillis(),
+                0
+        );
         viewModel.insert(recentFile);
 
         startActivity(intent);
