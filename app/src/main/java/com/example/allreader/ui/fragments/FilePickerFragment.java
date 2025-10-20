@@ -2,8 +2,10 @@ package com.example.allreader.ui.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,15 +21,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.allreader.R;
 import com.example.allreader.data.model.RecentFile;
-import com.example.allreader.ui.activities.ArchiveViewerActivity;
-import com.example.allreader.ui.activities.EpubReaderActivity;
-import com.example.allreader.ui.activities.ExcelReaderActivity;
-import com.example.allreader.ui.activities.ImageViewerActivity;
-import com.example.allreader.ui.activities.PdfReaderActivity;
-import com.example.allreader.ui.activities.PowerPointReaderActivity;
-import com.example.allreader.ui.activities.TxtReaderActivity;
-import com.example.allreader.ui.activities.VideoPlayerActivity;
-import com.example.allreader.ui.activities.WordReaderActivity;
+import com.example.allreader.ui.activities.*;
 import com.example.allreader.utils.Constants;
 import com.example.allreader.utils.FileUtils;
 import com.example.allreader.viewmodel.FileViewModel;
@@ -48,7 +42,14 @@ public class FilePickerFragment extends Fragment {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         Uri uri = result.getData().getData();
                         if (uri != null) {
-                            openFile(uri);
+                            try {
+                                // IMPORTANT: Take persistent URI permission
+                                takePersistableUriPermission(uri);
+                                openFile(uri);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(getContext(), "Error opening file", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
                 });
@@ -60,7 +61,7 @@ public class FilePickerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_file_picker, container, false);
 
         btnPickFile = view.findViewById(R.id.btnPickFile);
-        viewModel = new ViewModelProvider(this).get(FileViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(FileViewModel.class);
 
         btnPickFile.setOnClickListener(v -> pickFile());
 
@@ -70,22 +71,31 @@ public class FilePickerFragment extends Fragment {
     private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");  // Accept all files - this allows RAR
+        intent.setType("*/*");
 
-        // Remove the EXTRA_MIME_TYPES line completely
-        // This will show ALL files including RAR
+        // Request persistable permission
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
 
         filePickerLauncher.launch(intent);
+    }
+
+    private void takePersistableUriPermission(Uri uri) {
+        try {
+            final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            requireContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
     }
 
     private void openFile(Uri uri) {
         String fileName = FileUtils.getFileName(getContext(), uri);
         String filePath = uri.toString();
+        long fileSize = getFileSizeFromUri(uri);
 
         Intent intent = null;
         String fileType = "";
 
-        // Check file type in logical order
         if (FileUtils.isPdfFile(fileName)) {
             intent = new Intent(getActivity(), PdfReaderActivity.class);
             fileType = Constants.FILE_TYPE_PDF;
@@ -106,14 +116,13 @@ public class FilePickerFragment extends Fragment {
             intent = new Intent(getActivity(), PowerPointReaderActivity.class);
             fileType = Constants.FILE_TYPE_POWERPOINT;
         }
-        else if (FileUtils.isVideoFile(fileName)) {  // NEW
-            intent = new Intent(getActivity(), VideoPlayerActivity.class);
-            fileType = Constants.FILE_TYPE_VIDEO;
-        }
-
         else if (FileUtils.isTxtFile(fileName)) {
             intent = new Intent(getActivity(), TxtReaderActivity.class);
             fileType = Constants.FILE_TYPE_TXT;
+        }
+        else if (FileUtils.isVideoFile(fileName)) {
+            intent = new Intent(getActivity(), VideoPlayerActivity.class);
+            fileType = Constants.FILE_TYPE_VIDEO;
         }
         else if (FileUtils.isArchiveFile(fileName)) {
             intent = new Intent(getActivity(), ArchiveViewerActivity.class);
@@ -128,7 +137,6 @@ public class FilePickerFragment extends Fragment {
             return;
         }
 
-        // Pass file information to activity
         intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
         intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
         intent.putExtra(Constants.EXTRA_FILE_TYPE, fileType);
@@ -141,8 +149,29 @@ public class FilePickerFragment extends Fragment {
                 System.currentTimeMillis(),
                 0
         );
+        recentFile.setFileSize(fileSize);
+
         viewModel.insert(recentFile);
 
         startActivity(intent);
+    }
+
+    private long getFileSizeFromUri(Uri uri) {
+        long size = 0;
+        try {
+            if (uri.getScheme().equals("content")) {
+                Cursor cursor = requireContext().getContentResolver().query(uri, null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        size = cursor.getLong(sizeIndex);
+                    }
+                    cursor.close();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return size;
     }
 }

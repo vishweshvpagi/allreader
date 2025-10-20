@@ -1,6 +1,5 @@
 package com.example.allreader.data.model;
 
-
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -14,6 +13,7 @@ public class RecentFile {
     private String fileType;
     private long lastOpened;
     private int pageNumber;
+    private long fileSize;
 
     public RecentFile(String fileName, String filePath, String fileType, long lastOpened, int pageNumber) {
         this.fileName = fileName;
@@ -21,8 +21,10 @@ public class RecentFile {
         this.fileType = fileType;
         this.lastOpened = lastOpened;
         this.pageNumber = pageNumber;
+        this.fileSize = 0;
     }
 
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -69,5 +71,23 @@ public class RecentFile {
 
     public void setPageNumber(int pageNumber) {
         this.pageNumber = pageNumber;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    // getName() returns fileName - THIS IS THE KEY FIX
+    public String getName() {
+        return this.fileName;  // Changed from just 'return fileName;' to be explicit
+    }
+
+    // getSize() returns fileSize
+    public long getSize() {
+        return this.fileSize;
     }
 }

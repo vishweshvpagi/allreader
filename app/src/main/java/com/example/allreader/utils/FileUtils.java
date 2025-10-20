@@ -12,25 +12,25 @@ import java.util.Locale;
 public class FileUtils {
 
     public static String getFileName(Context context, Uri uri) {
-        String result = null;
+        String fileName = null;
         if (uri.getScheme().equals("content")) {
             try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                     if (nameIndex != -1) {
-                        result = cursor.getString(nameIndex);
+                        fileName = cursor.getString(nameIndex);
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        if (result == null) {
-            result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
-            }
+
+        if (fileName == null) {
+            fileName = uri.getLastPathSegment();
         }
-        return result;
+
+        return fileName != null ? fileName : "Unknown File";  // Never return null
     }
 
     public static String getFileExtension(String fileName) {
@@ -86,6 +86,29 @@ public class FileUtils {
     }
 
 
+    public static long getFileSize(Context context, Uri uri) {
+        long size = 0;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        size = cursor.getLong(sizeIndex);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if (uri.getScheme().equals("file")) {
+            try {
+                File file = new File(uri.getPath());
+                size = file.length();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return size;
+    }
 
 
     public static boolean isWordFile(String fileName) {

@@ -17,11 +17,13 @@ public class Constants {
     public static final String FILE_TYPE_IMAGE = "image";
     public static final String FILE_TYPE_WORD = "word";
 
+    public static final String PREFS_NAME = "AllReaderPrefs";
+    public static final String PREF_THEME = "dark_mode";
+    public static final String PREF_FONT_SIZE = "font_size";
+
 
     public static final int PERMISSION_REQUEST_CODE = 100;
     public static final int PICK_FILE_REQUEST_CODE = 101;
 
-    public static final String PREFS_NAME = "AllReaderPrefs";
-    public static final String PREF_THEME = "theme";
-    public static final String PREF_FONT_SIZE = "font_size";
+
 }
