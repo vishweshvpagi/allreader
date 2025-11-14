@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+
 
     <application
         android:name=".MainApplication"
@@ -37,19 +40,17 @@
         <!-- PDF Reader -->
         <activity
             android:name=".ui.activities.PdfReaderActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
-
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="content" />
                 <data android:scheme="file" />
+                <data android:scheme="content" />
                 <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
+
 
         <!-- EPUB Reader -->
         <activity

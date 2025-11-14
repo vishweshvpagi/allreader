@@ -5,11 +5,20 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
+    <!-- Main WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/controlsLayout" />
+
+    <!-- Second WebView for animation -->
+    <WebView
+        android:id="@+id/webViewNext"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/controlsLayout"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progressBar"

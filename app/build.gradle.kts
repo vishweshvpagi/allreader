@@ -59,7 +59,6 @@ dependencies {
     implementation("org.apache.poi:poi:5.2.3")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
     implementation("org.apache.poi:poi-scratchpad:5.2.3")
-
     // Required for Apache POI
     implementation("org.apache.commons:commons-compress:1.21")
     implementation("commons-codec:commons-codec:1.15")
@@ -67,6 +66,13 @@ dependencies {
     implementation("org.apache.commons:commons-collections4:4.4")
     implementation("org.apache.commons:commons-math3:3.6.1")
 
+
+    // For WebView dark mode
+    implementation("androidx.webkit:webkit:1.8.0")
+// For JSON serialization (recent files)
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
     // Image pinch-zoom viewer
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
@@ -94,12 +100,20 @@ dependencies {
     // RecyclerView and CardView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
-
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
     // Fragment and Navigation
     implementation("androidx.fragment:fragment:1.6.2")
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
-
+// PhotoView for PDF zoom
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
+// WebView dark mode support
+    implementation("androidx.webkit:webkit:1.8.0")
+// Gson for saving recent files
+    implementation("com.google.code.gson:gson:2.10.1")
+// Apache POI for Excel/Word
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

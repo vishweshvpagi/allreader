@@ -6,8 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -20,6 +24,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.allreader.R;
 import com.example.allreader.utils.Constants;
+import com.example.allreader.utils.PreferencesHelper;
+import com.example.allreader.utils.RecentFilesManager;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -39,6 +45,9 @@ public class ExcelReaderActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private Uri excelUri;
     private ExcelAdapter adapter;
+    private boolean isNightMode = false;
+    private boolean isFullscreen = false;
+    private String fileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +59,7 @@ public class ExcelReaderActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Handle both internal and external intents
         Intent intent = getIntent();
-        String fileName;
 
         if (intent.getData() != null) {
             excelUri = intent.getData();
@@ -75,7 +82,137 @@ public class ExcelReaderActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        // Load preferences
+        isNightMode = PreferencesHelper.isNightMode(this);
+        isFullscreen = PreferencesHelper.isFullscreenMode(this);
+
+        if (isFullscreen) {
+            enterFullscreen();
+        }
+
+        if (isNightMode) {
+            applyNightMode();
+        }
+
+        // Add to recent files
+        if (excelUri != null && fileName != null) {
+            long fileSize = getFileSize(excelUri);
+            RecentFilesManager.addRecentFile(this, fileName, excelUri.toString(),
+                    fileName.endsWith(".xlsx") ? "XLSX" : "XLS", fileSize);
+        }
+
         loadExcel(fileName);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_excel_reader, menu);
+
+        MenuItem nightModeItem = menu.findItem(R.id.action_night_mode);
+        nightModeItem.setTitle(isNightMode ? "Day Mode" : "Night Mode");
+
+        MenuItem fullscreenItem = menu.findItem(R.id.action_fullscreen);
+        fullscreenItem.setTitle(isFullscreen ? "Exit Fullscreen" : "Fullscreen");
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_night_mode) {
+            toggleNightMode();
+            return true;
+        } else if (id == R.id.action_fullscreen) {
+            toggleFullscreen();
+            return true;
+        } else if (id == R.id.action_share) {
+            shareDocument();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleNightMode() {
+        isNightMode = !isNightMode;
+        PreferencesHelper.setNightMode(this, isNightMode);
+        applyNightMode();
+        invalidateOptionsMenu();
+    }
+
+    private void applyNightMode() {
+        if (isNightMode) {
+            recyclerView.setBackgroundColor(0xFF1E1E1E);
+            getWindow().getDecorView().setBackgroundColor(0xFF1E1E1E);
+            Toast.makeText(this, "Night mode ON", Toast.LENGTH_SHORT).show();
+        } else {
+            recyclerView.setBackgroundColor(0xFFFFFFFF);
+            getWindow().getDecorView().setBackgroundColor(0xFFF5F5F5);
+            Toast.makeText(this, "Night mode OFF", Toast.LENGTH_SHORT).show();
+        }
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private void toggleFullscreen() {
+        if (isFullscreen) {
+            exitFullscreen();
+        } else {
+            enterFullscreen();
+        }
+    }
+
+    private void enterFullscreen() {
+        isFullscreen = true;
+        PreferencesHelper.setFullscreenMode(this, true);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
+        invalidateOptionsMenu();
+        Toast.makeText(this, "Fullscreen mode", Toast.LENGTH_SHORT).show();
+    }
+
+    private void exitFullscreen() {
+        isFullscreen = false;
+        PreferencesHelper.setFullscreenMode(this, false);
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().show();
+        }
+
+        invalidateOptionsMenu();
+        Toast.makeText(this, "Fullscreen off", Toast.LENGTH_SHORT).show();
+    }
+
+    private void shareDocument() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, excelUri);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(shareIntent, "Share Spreadsheet"));
+    }
+
+    private long getFileSize(Uri uri) {
+        try {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                long size = cursor.getLong(sizeIndex);
+                cursor.close();
+                return size;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     private String getFileNameFromUri(Uri uri) {
@@ -107,6 +244,7 @@ public class ExcelReaderActivity extends AppCompatActivity {
 
         new Thread(() -> {
             List<List<String>> excelData = new ArrayList<>();
+            int maxColumns = 0;
 
             try {
                 InputStream inputStream = getContentResolver().openInputStream(excelUri);
@@ -119,32 +257,39 @@ public class ExcelReaderActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Create workbook based on file type
                 Workbook workbook;
                 if (fileName.endsWith(".xlsx")) {
-                    workbook = new XSSFWorkbook(inputStream);  // For .xlsx
+                    workbook = new XSSFWorkbook(inputStream);
                 } else {
-                    workbook = new HSSFWorkbook(inputStream);  // For .xls
+                    workbook = new HSSFWorkbook(inputStream);
                 }
 
-                // Get first sheet
                 Sheet sheet = workbook.getSheetAt(0);
 
-                // Read all rows
                 for (Row row : sheet) {
                     List<String> rowData = new ArrayList<>();
+                    int lastCellNum = row.getLastCellNum();
 
-                    for (Cell cell : row) {
+                    for (int i = 0; i < lastCellNum; i++) {
+                        Cell cell = row.getCell(i);
                         String cellValue = getCellValueAsString(cell);
                         rowData.add(cellValue);
                     }
 
+                    maxColumns = Math.max(maxColumns, rowData.size());
                     excelData.add(rowData);
+                }
+
+                for (List<String> row : excelData) {
+                    while (row.size() < maxColumns) {
+                        row.add("");
+                    }
                 }
 
                 workbook.close();
                 inputStream.close();
 
+                int finalMaxColumns = maxColumns;
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
 
@@ -155,7 +300,7 @@ public class ExcelReaderActivity extends AppCompatActivity {
                     }
 
                     recyclerView.setVisibility(View.VISIBLE);
-                    adapter = new ExcelAdapter(excelData);
+                    adapter = new ExcelAdapter(excelData, finalMaxColumns);
                     recyclerView.setAdapter(adapter);
                 });
 
@@ -181,16 +326,24 @@ public class ExcelReaderActivity extends AppCompatActivity {
             case STRING:
                 return cell.getStringCellValue();
             case NUMERIC:
-                // Check if it's a date
                 if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
                     return cell.getDateCellValue().toString();
                 } else {
-                    return String.valueOf(cell.getNumericCellValue());
+                    double value = cell.getNumericCellValue();
+                    if (value == (long) value) {
+                        return String.valueOf((long) value);
+                    } else {
+                        return String.valueOf(value);
+                    }
                 }
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
             case FORMULA:
-                return cell.getCellFormula();
+                try {
+                    return String.valueOf(cell.getNumericCellValue());
+                } catch (Exception e) {
+                    return cell.getCellFormula();
+                }
             case BLANK:
                 return "";
             default:
@@ -204,13 +357,16 @@ public class ExcelReaderActivity extends AppCompatActivity {
         return true;
     }
 
-    // RecyclerView Adapter
     private class ExcelAdapter extends RecyclerView.Adapter<ExcelAdapter.ViewHolder> {
 
         private final List<List<String>> data;
+        private final int columnCount;
+        private final List<HorizontalScrollView> scrollViews = new ArrayList<>();
+        private boolean isScrolling = false;
 
-        public ExcelAdapter(List<List<String>> data) {
+        public ExcelAdapter(List<List<String>> data, int columnCount) {
             this.data = data;
+            this.columnCount = columnCount;
         }
 
         @NonNull
@@ -224,7 +380,11 @@ public class ExcelReaderActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             List<String> rowData = data.get(position);
-            holder.bind(rowData, position == 0);  // First row is header
+            holder.bind(rowData, position);
+
+            if (!scrollViews.contains(holder.scrollView)) {
+                scrollViews.add(holder.scrollView);
+            }
         }
 
         @Override
@@ -232,29 +392,67 @@ public class ExcelReaderActivity extends AppCompatActivity {
             return data.size();
         }
 
+        @Override
+        public void onViewRecycled(@NonNull ViewHolder holder) {
+            super.onViewRecycled(holder);
+            scrollViews.remove(holder.scrollView);
+        }
+
+        private void syncScroll(HorizontalScrollView source, int scrollX) {
+            if (isScrolling) return;
+
+            isScrolling = true;
+            for (HorizontalScrollView scrollView : scrollViews) {
+                if (scrollView != source) {
+                    scrollView.scrollTo(scrollX, 0);
+                }
+            }
+            isScrolling = false;
+        }
+
         class ViewHolder extends RecyclerView.ViewHolder {
+            HorizontalScrollView scrollView;
             LinearLayout rowContainer;
+            TextView rowNumberView;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
+                scrollView = itemView.findViewById(R.id.horizontalScrollView);
                 rowContainer = itemView.findViewById(R.id.rowContainer);
+                rowNumberView = itemView.findViewById(R.id.rowNumber);
+
+                scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                    syncScroll((HorizontalScrollView) v, scrollX);
+                });
             }
 
-            public void bind(List<String> rowData, boolean isHeader) {
+            public void bind(List<String> rowData, int rowIndex) {
                 rowContainer.removeAllViews();
 
-                for (String cellValue : rowData) {
+                rowNumberView.setText(String.valueOf(rowIndex + 1));
+                rowNumberView.setBackgroundResource(R.drawable.cell_border);
+
+                boolean isHeader = rowIndex == 0;
+
+                for (int i = 0; i < rowData.size(); i++) {
+                    String cellValue = rowData.get(i);
                     TextView textView = new TextView(itemView.getContext());
                     textView.setText(cellValue);
-                    textView.setPadding(16, 16, 16, 16);
+                    textView.setPadding(24, 20, 24, 20);
                     textView.setMinWidth(200);
+                    textView.setMaxWidth(400);
+                    textView.setSingleLine(false);
+                    textView.setBackgroundResource(R.drawable.cell_border);
 
                     if (isHeader) {
-                        textView.setTextSize(16);
-                        textView.setTypeface(null, android.graphics.Typeface.BOLD);
-                        textView.setBackgroundColor(0xFFEEEEEE);
-                    } else {
                         textView.setTextSize(14);
+                        textView.setTypeface(null, android.graphics.Typeface.BOLD);
+                        textView.setTextColor(0xFF000000);
+                        textView.setBackgroundResource(R.drawable.header_cell_border);
+                        rowNumberView.setBackgroundResource(R.drawable.header_cell_border);
+                    } else {
+                        textView.setTextSize(13);
+                        textView.setTextColor(isNightMode ? 0xFFE0E0E0 : 0xFF333333);
                     }
 
                     rowContainer.addView(textView);

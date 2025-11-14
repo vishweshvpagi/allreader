@@ -1,111 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="#FAFAFA">
 
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/controlsLayout" />
+        android:background="#FFFFFF"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/searchCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/searchInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Search in document..."
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:background="@null"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp" />
+
+                <ImageButton
+                    android:id="@+id/btnPrevSearch"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Previous" />
+
+                <ImageButton
+                    android:id="@+id/btnNextSearch"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Next" />
+
+                <ImageButton
+                    android:id="@+id/btnCloseSearch"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Close" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/searchResultText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
+        android:layout_gravity="center" />
 
-    <!-- Search Bar -->
-    <LinearLayout
-        android:id="@+id/searchBar"
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#F5F5F5"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:visibility="gone"
-        android:elevation="4dp">
+        android:layout_gravity="bottom"
+        app:backgroundTint="#FFFFFF"
+        app:elevation="8dp">
 
-        <EditText
-            android:id="@+id/searchInput"
-            android:layout_width="0dp"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Search in document..."
-            android:singleLine="true"
-            android:imeOptions="actionSearch" />
+            android:scrollbars="none">
 
-        <Button
-            android:id="@+id/btnPrevSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="◄"
-            android:minWidth="48dp" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
-        <Button
-            android:id="@+id/btnNextSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="►"
-            android:minWidth="48dp" />
+                <ImageButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Search"
+                    android:layout_marginEnd="8dp" />
 
-        <Button
-            android:id="@+id/btnCloseSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✕"
-            android:minWidth="48dp" />
+                <ImageButton
+                    android:id="@+id/btnZoomOut"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_zoom"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Zoom Out"
+                    android:rotation="180"
+                    android:layout_marginEnd="8dp" />
 
-    </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnZoomIn"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_zoom"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Zoom In"
+                    android:layout_marginEnd="8dp" />
 
-    <!-- Bottom Controls -->
-    <LinearLayout
-        android:id="@+id/controlsLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="#88000000"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="center">
+                <ImageButton
+                    android:id="@+id/btnWordCount"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_info_details"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Document Info"
+                    android:layout_marginEnd="8dp" />
 
-        <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🔍 Search"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555" />
+                <ImageButton
+                    android:id="@+id/btnNightMode"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_dialog_info"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Night Mode"
+                    android:layout_marginEnd="8dp" />
 
-        <Button
-            android:id="@+id/btnZoomOut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="A-"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555"
-            android:layout_marginStart="8dp" />
+                <ImageButton
+                    android:id="@+id/btnFullscreen"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_view"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Fullscreen"
+                    android:layout_marginEnd="8dp" />
 
-        <Button
-            android:id="@+id/btnZoomIn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="A+"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555"
-            android:layout_marginStart="4dp" />
+                <ImageButton
+                    android:id="@+id/btnShare"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@android:drawable/ic_menu_share"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Share" />
 
-        <Button
-            android:id="@+id/btnWordCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📊 Info"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#555555"
-            android:layout_marginStart="8dp" />
+            </LinearLayout>
+        </HorizontalScrollView>
 
-    </LinearLayout>
+    </com.google.android.material.bottomappbar.BottomAppBar>
 
-</RelativeLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
