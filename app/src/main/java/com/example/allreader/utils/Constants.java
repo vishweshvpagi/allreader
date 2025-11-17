@@ -21,6 +21,7 @@ public class Constants {
     public static final String PREF_THEME = "dark_mode";
     public static final String PREF_FONT_SIZE = "font_size";
 
+    public static final String FILE_TYPE_AUDIO = "audio";
 
     public static final int PERMISSION_REQUEST_CODE = 100;
     public static final int PICK_FILE_REQUEST_CODE = 101;

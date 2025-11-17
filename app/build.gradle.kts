@@ -66,7 +66,8 @@ dependencies {
     implementation("org.apache.commons:commons-collections4:4.4")
     implementation("org.apache.commons:commons-math3:3.6.1")
 
-
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
     // For WebView dark mode
     implementation("androidx.webkit:webkit:1.8.0")
 // For JSON serialization (recent files)

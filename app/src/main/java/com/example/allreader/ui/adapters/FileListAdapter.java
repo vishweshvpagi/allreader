@@ -73,6 +73,8 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.FileVi
                 return R.drawable.ic_image;
             case Constants.FILE_TYPE_VIDEO:
                 return R.drawable.ic_video;
+            case Constants.FILE_TYPE_AUDIO:
+                return R.drawable.ic_audio_file;
             case Constants.FILE_TYPE_ARCHIVE:
                 return R.drawable.ic_archive;
             case Constants.FILE_TYPE_TXT:

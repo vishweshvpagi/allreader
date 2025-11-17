@@ -2,6 +2,7 @@ package com.example.allreader.ui.fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -24,6 +25,7 @@ import com.example.allreader.data.model.FileItem;
 import com.example.allreader.ui.adapters.FileListAdapter;
 import com.example.allreader.ui.activities.*;
 import com.example.allreader.utils.Constants;
+import com.example.allreader.utils.FileUtils;
 import com.example.allreader.viewmodel.FileViewModel;
 
 import java.util.List;
@@ -132,44 +134,83 @@ public class HomeFragment extends Fragment {
 
         Intent intent = null;
         String fileType = recentFile.getFileType();
+        String fileName = recentFile.getFileName();
+        String filePath = recentFile.getFilePath();
 
-        switch (fileType) {
-            case Constants.FILE_TYPE_PDF:
-                intent = new Intent(getActivity(), PdfReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_EPUB:
-                intent = new Intent(getActivity(), EpubReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_WORD:
-                intent = new Intent(getActivity(), WordReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_EXCEL:
-                intent = new Intent(getActivity(), ExcelReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_POWERPOINT:
-                intent = new Intent(getActivity(), PowerPointReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_TXT:
-                intent = new Intent(getActivity(), TxtReaderActivity.class);
-                break;
-            case Constants.FILE_TYPE_VIDEO:
-                intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                break;
-            case Constants.FILE_TYPE_ARCHIVE:
-                intent = new Intent(getActivity(), ArchiveViewerActivity.class);
-                break;
-            case Constants.FILE_TYPE_IMAGE:
-                intent = new Intent(getActivity(), ImageViewerActivity.class);
-                break;
+        Uri fileUri = Uri.parse(filePath);
+
+        // Check by filename extension as fallback
+        if (fileType.equals(Constants.FILE_TYPE_AUDIO) || FileUtils.isAudioFile(fileName)) {
+            intent = new Intent(getActivity(), AudioPlayerActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra("AUDIO_URI", filePath);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_PDF)) {
+            intent = new Intent(getActivity(), PdfReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_EPUB)) {
+            intent = new Intent(getActivity(), EpubReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_WORD)) {
+            intent = new Intent(getActivity(), WordReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_EXCEL)) {
+            intent = new Intent(getActivity(), ExcelReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_POWERPOINT)) {
+            intent = new Intent(getActivity(), PowerPointReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_TXT)) {
+            intent = new Intent(getActivity(), TxtReaderActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_VIDEO)) {
+            intent = new Intent(getActivity(), VideoPlayerActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_ARCHIVE)) {
+            intent = new Intent(getActivity(), ArchiveViewerActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+        }
+        else if (fileType.equals(Constants.FILE_TYPE_IMAGE)) {
+            intent = new Intent(getActivity(), ImageViewerActivity.class);
+            intent.setData(fileUri);
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
         }
 
         if (intent != null) {
-            intent.putExtra(Constants.EXTRA_FILE_PATH, recentFile.getFilePath());
-            intent.putExtra(Constants.EXTRA_FILE_NAME, recentFile.getFileName());
-            intent.putExtra(Constants.EXTRA_FILE_TYPE, recentFile.getFileType());
-            startActivity(intent);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting activity", e);
+                Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Toast.makeText(getContext(), "Unsupported file type", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Unsupported file type: " + fileType, Toast.LENGTH_SHORT).show();
         }
     }
 

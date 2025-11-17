@@ -96,50 +96,64 @@ public class FilePickerFragment extends Fragment {
         Intent intent = null;
         String fileType = "";
 
-        if (FileUtils.isPdfFile(fileName)) {
-            intent = new Intent(getActivity(), PdfReaderActivity.class);
+        // Handle audio files first with proper URI passing
+        if (FileUtils.isAudioFile(fileName)) {
+            intent = new Intent(requireActivity(), AudioPlayerActivity.class);
+            intent.setData(uri);  // Set URI as intent data
+            intent.putExtra("AUDIO_URI", uri.toString());  // Also pass as string extra
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);  // Grant permission
+            fileType = Constants.FILE_TYPE_AUDIO;
+        }
+        else if (FileUtils.isPdfFile(fileName)) {
+            intent = new Intent(requireActivity(), PdfReaderActivity.class);
             fileType = Constants.FILE_TYPE_PDF;
         }
         else if (FileUtils.isEpubFile(fileName)) {
-            intent = new Intent(getActivity(), EpubReaderActivity.class);
+            intent = new Intent(requireActivity(), EpubReaderActivity.class);
             fileType = Constants.FILE_TYPE_EPUB;
         }
         else if (FileUtils.isWordFile(fileName)) {
-            intent = new Intent(getActivity(), WordReaderActivity.class);
+            intent = new Intent(requireActivity(), WordReaderActivity.class);
             fileType = Constants.FILE_TYPE_WORD;
         }
         else if (FileUtils.isExcelFile(fileName)) {
-            intent = new Intent(getActivity(), ExcelReaderActivity.class);
+            intent = new Intent(requireActivity(), ExcelReaderActivity.class);
             fileType = Constants.FILE_TYPE_EXCEL;
         }
         else if (FileUtils.isPowerPointFile(fileName)) {
-            intent = new Intent(getActivity(), PowerPointReaderActivity.class);
+            intent = new Intent(requireActivity(), PowerPointReaderActivity.class);
             fileType = Constants.FILE_TYPE_POWERPOINT;
         }
         else if (FileUtils.isTxtFile(fileName)) {
-            intent = new Intent(getActivity(), TxtReaderActivity.class);
+            intent = new Intent(requireActivity(), TxtReaderActivity.class);
             fileType = Constants.FILE_TYPE_TXT;
         }
         else if (FileUtils.isVideoFile(fileName)) {
-            intent = new Intent(getActivity(), VideoPlayerActivity.class);
+            intent = new Intent(requireActivity(), VideoPlayerActivity.class);
             fileType = Constants.FILE_TYPE_VIDEO;
         }
         else if (FileUtils.isArchiveFile(fileName)) {
-            intent = new Intent(getActivity(), ArchiveViewerActivity.class);
+            intent = new Intent(requireActivity(), ArchiveViewerActivity.class);
             fileType = Constants.FILE_TYPE_ARCHIVE;
         }
         else if (FileUtils.isImageFile(fileName)) {
-            intent = new Intent(getActivity(), ImageViewerActivity.class);
+            intent = new Intent(requireActivity(), ImageViewerActivity.class);
             fileType = Constants.FILE_TYPE_IMAGE;
         }
+        else if(FileUtils.isAudioFile(fileName)){
+            intent = new Intent(requireActivity(), AudioPlayerActivity.class);
+            fileType = Constants.FILE_TYPE_AUDIO;}
         else {
             Toast.makeText(getContext(), "Unsupported file type: " + fileName, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
-        intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
-        intent.putExtra(Constants.EXTRA_FILE_TYPE, fileType);
+        // Add common extras for non-audio files
+        if (!FileUtils.isAudioFile(fileName)) {
+            intent.putExtra(Constants.EXTRA_FILE_PATH, filePath);
+            intent.putExtra(Constants.EXTRA_FILE_NAME, fileName);
+            intent.putExtra(Constants.EXTRA_FILE_TYPE, fileType);
+        }
 
         // Save to recent files
         RecentFile recentFile = new RecentFile(
@@ -153,7 +167,12 @@ public class FilePickerFragment extends Fragment {
 
         viewModel.insert(recentFile);
 
-        startActivity(intent);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error opening file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private long getFileSizeFromUri(Uri uri) {
